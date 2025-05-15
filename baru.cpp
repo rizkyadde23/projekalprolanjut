@@ -14,29 +14,34 @@ struct Penyanyi {
 };
 
 
+void writeDataCount(fstream &count, int &jumlahPenyanyi){
+    count.open("count.txt",ios::in|ios::out);
+    count<<jumlahPenyanyi;
+    count.close();
+}
 
-void writeData(fstream &file,Penyanyi &data,int &jumlahPenyanyi){
-    file<<"NO : "<<jumlahPenyanyi<<endl;
+void writeData(fstream &file, fstream &count,Penyanyi &data,int &jumlahPenyanyi){
+    file.open("file.txt",ios::in|ios::out|ios::app);  
+    file<<"ARTIS KE-"<<jumlahPenyanyi<<endl;
     file<<"NAMA : "<<data.nama<<endl;
     file<<"JUDUL : "<<data.lagu.judul<<endl;
     file<<"GENRE : "<<data.lagu.genre<<endl;
     file<<"DURASI : "<<data.lagu.durasi<<" menit"<<endl;
     file<<"TAHUN : "<<data.lagu.tahun<<endl;
     file<<endl;
+    file.close();
 }
 
 // Fungsi input data penyanyi dan lagu
-void inputData(fstream &file,Penyanyi &data, int &jumlahPenyanyi) {
+void inputData(fstream &file,fstream &count,Penyanyi &data, int &jumlahPenyanyi) {
     int inputPenyanyi,inputLagu;
-    int counter = 0;
-    int buffer = 0;
+    int buffer;
     cout << "Masukkan jumlah penyanyi yang akan didata: ";
     cin >> inputPenyanyi;
     cin.ignore();
-    for (int i = jumlahPenyanyi; i <= jumlahPenyanyi + inputPenyanyi; i++) {
-        counter++;
-        buffer = counter+jumlahPenyanyi;
-        cout << "Artis Ke-" << i + 1 << endl;
+    for (int i = jumlahPenyanyi; i < jumlahPenyanyi + inputPenyanyi; i++) {
+        buffer = i+1;
+        cout << "Artis Ke-" << i+1 << endl;
         cout << "Masukkan Nama Artis : ";
         getline(cin, data.nama);
         cout << "Berapa Lagu Yang Dirilis : ";
@@ -52,56 +57,47 @@ void inputData(fstream &file,Penyanyi &data, int &jumlahPenyanyi) {
             getline(cin, data.lagu.durasi);
             cout << "Tahun Lagu : ";
             getline(cin, data.lagu.tahun);
-            writeData(file,data,buffer);
+            writeData(file,count,data,buffer);
         }
     }
+    jumlahPenyanyi += inputPenyanyi;
+    writeDataCount(count,jumlahPenyanyi);
 }
 
 Penyanyi readData(fstream &file, Penyanyi &data) {
     string temp;
     size_t pos;
-
     // NO
-            if (!getline(file, temp)) return data;
-
+    if (!getline(file, temp)) return data;
     // NAMA
     if (getline(file, temp)) {
         pos = temp.find(":");
         data.nama = (pos != string::npos && pos + 2 <= temp.size()) ? temp.substr(pos + 2) : "";
     }
-
     // JUDUL
     if (getline(file, temp)) {
         pos = temp.find(":");
         data.lagu.judul = (pos != string::npos && pos + 1 <= temp.size()) ? temp.substr(pos + 1) : "";
     }
-
     // GENRE
     if (getline(file, temp)) {
         pos = temp.find(":");
         data.lagu.genre = (pos != string::npos && pos + 1 <= temp.size()) ? temp.substr(pos + 1) : "";
     }
-
     // DURASI
     if (getline(file, temp)) {
         pos = temp.find(":");
         data.lagu.durasi = (pos != string::npos && pos + 1 <= temp.size()) ? temp.substr(pos + 1) : "";
     }
-
     // TAHUN
     if (getline(file, temp)) {
         pos = temp.find(":");
         data.lagu.tahun = (pos != string::npos && pos + 1 <= temp.size()) ? temp.substr(pos + 1) : "";
     }
-
     // Blank line
     getline(file, temp);
-
     return data;
 }
-
-
-
 
 // Fungsi rekursif
 void tampilkanLaguRekursif(fstream &file,Penyanyi &data) {
@@ -121,7 +117,6 @@ void tampilkanLaguRekursif(fstream &file,Penyanyi &data) {
     cout<<"Durasi Lagu : "<<data.lagu.durasi<<endl;
     cout<<"Tahun Lagu : "<<data.lagu.tahun<<endl;
     tampilkanLaguRekursif(file,data);
-  
 }
 
 // Fungsi sequential search
@@ -173,7 +168,7 @@ void cariLaguSequential() {
 //     tampilkanLaguRekursif(daftarPenyanyi, jumlahPenyanyi);
 // }
 
-bool pilih(fstream &file,Penyanyi &data, int &jumlahPenyanyi){
+bool pilih(fstream &file,fstream &count,Penyanyi &data, int &jumlahPenyanyi){
     int pilihan;
     do
     {
@@ -187,14 +182,15 @@ bool pilih(fstream &file,Penyanyi &data, int &jumlahPenyanyi){
     
     switch (pilihan) {
             case 1:
-                inputData(file,data,jumlahPenyanyi);
+                inputData(file,count,data,jumlahPenyanyi);
                 break;
             case 2:
                 if (jumlahPenyanyi == 0) {
                     cout << "Belum ada data yang dimasukkan!" << endl;
                 } else 
+                    file.open("file.txt",ios::in|ios::out|ios::app);  
                     tampilkanLaguRekursif(file,data);
-                
+                    file.close();
                 break;
             case 3: {
                 if (jumlahPenyanyi == 0) {
@@ -229,38 +225,34 @@ bool pilih(fstream &file,Penyanyi &data, int &jumlahPenyanyi){
     }
 }
 
-int hitungJumlahPenyanyi(fstream &file) {
-    file.open("file.txt", ios::in);
-    string line;
-    int count = 0;
-    while (getline(file, line)) {
-        if (line.find("NO :") == 0) {
-            count++;
-        }
-    }
-    file.close();
-    return count;
+int hitungJumlahPenyanyi(fstream &count) {
+    count.open("count.txt", ios::in|ios::out|ios::app);
+    int counter = 0;
+   while (!count.eof())
+   {
+    count>>counter;
+   }
+    count.close();
+    return counter;
 }
 
 // Tampilan Menu
-bool tampilkanMenu(fstream &file,Penyanyi &data) {
+bool tampilkanMenu(fstream &file, fstream &count,Penyanyi &data) {
     int pilihan;
+    int jumlahPenyanyi = hitungJumlahPenyanyi(count);
     do {
-        int jumlahPenyanyi = hitungJumlahPenyanyi(file);
-        file.open("file.txt",ios::in|ios::out|ios::app);  
         cout << "\n=== Menu ===" << endl;
         cout << "1. Input Data Penyanyi dan Lagu" << endl;
         cout << "2. Tampilkan Semua Lagu" << endl;
         cout << "3. Cari Lagu" << endl;
         cout << "4. Urutkan Lagu" << endl;
         cout << "5. Keluar" << endl;
-        pilih(file,data,jumlahPenyanyi);
+        pilih(file,count,data,jumlahPenyanyi);
         // Konfirmasi apakah ingin kembali ke menu
         char lanjut;
         cout << "\nIngin kembali ke menu utama? (y/n): ";
         cin >> lanjut;
         cin.ignore();
-        file.close();
         if (lanjut == 'n' || lanjut == 'N') {
             cout << "Keluar dari program..." << endl;
             return false;
@@ -271,7 +263,8 @@ bool tampilkanMenu(fstream &file,Penyanyi &data) {
 
 int main() {
     fstream file;
+    fstream count;
     Penyanyi penyanyi;
-    while (tampilkanMenu(file,penyanyi));
+    while (tampilkanMenu(file,count,penyanyi));
     return 0;
 }
