@@ -16,10 +16,12 @@ struct Penyanyi {
 
 void writeDataCount(fstream &count, int &jumlahPenyanyi){
     count.open("count.txt",ios::in|ios::out);
-    count<<jumlahPenyanyi;
+    count<<jumlahPenyanyi;//Menulis Jumlah Penyanyi Ke File
     count.close();
 }
 
+
+//Fungsi Menulis Data Penyanyi Ke File
 void writeData(fstream &file, fstream &count,Penyanyi &data,int &jumlahPenyanyi){
     file.open("file.txt",ios::in|ios::out|ios::app);  
     file<<"ARTIS KE-"<<jumlahPenyanyi<<endl;
@@ -39,6 +41,7 @@ void inputData(fstream &file,fstream &count,Penyanyi &data, int &jumlahPenyanyi)
     cout << "Masukkan jumlah penyanyi yang akan didata: ";
     cin >> inputPenyanyi;
     cin.ignore();
+    //Input Penyanyi Dan Lagunya
     for (int i = jumlahPenyanyi; i < jumlahPenyanyi + inputPenyanyi; i++) {
         buffer = i+1;
         cout << "Artis Ke-" << i+1 << endl;
@@ -57,11 +60,11 @@ void inputData(fstream &file,fstream &count,Penyanyi &data, int &jumlahPenyanyi)
             getline(cin, data.lagu.durasi);
             cout << "Tahun Lagu : ";
             getline(cin, data.lagu.tahun);
-            writeData(file,count,data,buffer);
+            writeData(file,count,data,buffer); //Menulis Data Penyanyi Ke File 
         }
     }
     jumlahPenyanyi += inputPenyanyi;
-    writeDataCount(count,jumlahPenyanyi);
+    writeDataCount(count,jumlahPenyanyi); //Menulis Jumlah Penyanyi Yang Sudah Diinput
 }
 
 Penyanyi readData(fstream &file, Penyanyi &data) {
@@ -71,30 +74,30 @@ Penyanyi readData(fstream &file, Penyanyi &data) {
     if (!getline(file, temp)) return data;
     // NAMA
     if (getline(file, temp)) {
-        pos = temp.find(":");
+        pos = temp.find(":"); //Cari ":" + 2 untuk mendapatkan data 
         data.nama = (pos != string::npos && pos + 2 <= temp.size()) ? temp.substr(pos + 2) : "";
     }
     // JUDUL
     if (getline(file, temp)) {
-        pos = temp.find(":");
-        data.lagu.judul = (pos != string::npos && pos + 1 <= temp.size()) ? temp.substr(pos + 1) : "";
+        pos = temp.find(":");//Cari ":" + 2 untuk mendapatkan data 
+        data.lagu.judul = (pos != string::npos && pos + 1 <= temp.size()) ? temp.substr(pos + 2) : "";
     }
     // GENRE
     if (getline(file, temp)) {
-        pos = temp.find(":");
-        data.lagu.genre = (pos != string::npos && pos + 1 <= temp.size()) ? temp.substr(pos + 1) : "";
+        pos = temp.find(":");//Cari ":" + 2 untuk mendapatkan data 
+        data.lagu.genre = (pos != string::npos && pos + 1 <= temp.size()) ? temp.substr(pos + 2) : "";
     }
     // DURASI
     if (getline(file, temp)) {
-        pos = temp.find(":");
-        data.lagu.durasi = (pos != string::npos && pos + 1 <= temp.size()) ? temp.substr(pos + 1) : "";
+        pos = temp.find(":");//Cari ":" + 2 untuk mendapatkan data 
+        data.lagu.durasi = (pos != string::npos && pos + 1 <= temp.size()) ? temp.substr(pos + 2) : "";
     }
     // TAHUN
     if (getline(file, temp)) {
-        pos = temp.find(":");
-        data.lagu.tahun = (pos != string::npos && pos + 1 <= temp.size()) ? temp.substr(pos + 1) : "";
+        pos = temp.find(":");//Cari ":" + 2 untuk mendapatkan data 
+        data.lagu.tahun = (pos != string::npos && pos + 1 <= temp.size()) ? temp.substr(pos + 2) : "";
     }
-    // Blank line
+    // ENDLINE
     getline(file, temp);
     return data;
 }
@@ -105,11 +108,11 @@ void tampilkanLaguRekursif(fstream &file,Penyanyi &data) {
     {
         return;
     }
-    streampos currentPos = file.tellg();
-    data = readData(file, data);
+    data = readData(file, data); //Ambil Data Dari File
     if(file.fail()||file.eof()){
         return;
     }
+    //Output Data (Pake Penyanyi data karena sebagai parameter )
     cout<<"====================================="<<endl;
     cout<<"Nama Artis  : "<<data.nama<<endl;
     cout<<"Judul Lagu : "<<data.lagu.judul<<endl;
@@ -120,26 +123,35 @@ void tampilkanLaguRekursif(fstream &file,Penyanyi &data) {
 }
 
 // Fungsi sequential search
-void cariLaguSequential() {
-    // bool ditemukan = false;
-    // for (int i = 0; i < jumlah; i++) {
-    //     for (int j = 0; j < 100 && !penyanyi[i].lagu[j].judul.empty(); j++) {
-    //         if (penyanyi[i].lagu[j].judul == cariJudul) {
-    //             cout << "Lagu ditemukan!" << endl;
-    //             cout << "Artis  : " << penyanyi[i].nama << endl;
-    //             cout << "Judul  : " << penyanyi[i].lagu[j].judul << endl;
-    //             cout << "Genre  : " << penyanyi[i].lagu[j].genre << endl;
-    //             cout << "Durasi : " << penyanyi[i].lagu[j].durasi << endl;
-    //             cout << "Tahun  : " << penyanyi[i].lagu[j].tahun << endl;
-    //             ditemukan = true;
-    //             return;
-    //         }
-    //     }
-    // }
-
-    // if (!ditemukan) {
-    //     cout << "Lagu tidak ditemukan!" << endl;
-    // }
+void cariLaguSequential(fstream &file, Penyanyi &data) {
+    string name;
+    Penyanyi output;
+    cout<<"Pencarian Artis : ";
+    cin.ignore();
+    getline(cin,name);//Input Indikator
+    bool found = false;
+    int counter = 0;
+    file.open("file.txt",ios::in);
+    while (!file.eof())
+    {
+        output = readData(file,data);//Ambil Data Dari File (Pake Penyanyi output karena lebih optimal)
+        if (output.nama==name)
+        {
+            found = true;
+            counter++;//Counter Lagu Artis Yang Dicari
+            cout<<"Found :"<<endl;
+            cout<<"NAMA ARTIS : "<<output.nama<<endl;//Jika Cuma Sekali Tampil Aja Bisa Pake Counter + If Statement
+            cout<<"Judul Lagu Ke-"<<counter<<" : "<<output.lagu.judul<<endl;
+            cout<<"Judul Lagu Ke-"<<counter<<" : "<<output.lagu.genre<<endl;
+            cout<<"Judul Lagu Ke-"<<counter<<" : "<<output.lagu.durasi<<endl;
+            cout<<"Judul Lagu Ke-"<<counter<<" : "<<output.lagu.tahun<<endl;
+        } 
+    }
+    file.close();  
+    if (!found)
+    {
+    cout<<"Not Found"<<endl;
+    }
 }
 
 // Fungsi untuk sorting Bubble Sort
@@ -198,10 +210,7 @@ bool pilih(fstream &file,fstream &count,Penyanyi &data, int &jumlahPenyanyi){
                     break;
                 } else
                 {
-                string cariJudul;
-                cout << "Masukkan judul lagu yang ingin dicari: ";
-                getline(cin, cariJudul);
-                cariLaguSequential();
+                cariLaguSequential(file,data);
                 }
                 break;
             }
