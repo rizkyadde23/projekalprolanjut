@@ -132,7 +132,7 @@ void cariLaguSequential(fstream &file, Penyanyi &data) {
     bool found = false;
     int counter = 0;
     file.open("file.txt",ios::in);
-    while (!file.eof())
+    while (!file.eof() && !found)
     {
         output = readData(file,data);//Ambil Data Dari File (Pake Penyanyi output karena lebih optimal)
         if (output.nama==name)
@@ -144,13 +144,14 @@ void cariLaguSequential(fstream &file, Penyanyi &data) {
             cout<<"Found :"<<endl;
             cout<<"NAMA ARTIS : "<<output.nama<<endl;
             }
-            cout<<"=========="<<endl;
+            cout<<"====================================="<<endl;
             cout<<"Judul Lagu Ke-"<<counter<<" : "<<output.lagu.judul<<endl;
             cout<<"Genre Lagu Ke-"<<counter<<" : "<<output.lagu.genre<<endl;
             cout<<"Durasi Lagu Ke-"<<counter<<" : "<<output.lagu.durasi<<endl;
             cout<<"Tahun Lagu Ke-"<<counter<<" : "<<output.lagu.tahun<<endl;
         } 
     }
+    cout<<"====================================="<<endl;
     file.close();  
     if (!found)
     {
@@ -169,6 +170,27 @@ int readAllLaguToArray(fstream &file, Penyanyi arr[], int &maxSize) {
     }
     file.close();
     return count; // jumlah lagu yang berhasil dibaca
+}
+
+void bubbleSortLaguArtis(Penyanyi arr[], int &n, bool &ascending) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (ascending) {
+                if (arr[j].nama > arr[j + 1].nama) {
+                    // tukar posisi
+                    Penyanyi temp = arr[j];
+                    arr[j] = arr[j + 1];
+                    arr[j + 1] = temp;
+                }
+            } else if (arr[j].nama < arr[j + 1].nama) {
+                    // tukar posisi
+                    Penyanyi temp = arr[j];
+                    arr[j] = arr[j + 1];
+                    arr[j + 1] = temp;
+                }
+            
+        }
+    }
 }
 
 void bubbleSortLaguJudul(Penyanyi arr[], int &n, bool &ascending) {
@@ -227,6 +249,7 @@ bool pilih(fstream &file,fstream &count,Penyanyi &data, int &jumlahPenyanyi){
                 } else 
                     file.open("file.txt",ios::in|ios::out|ios::app);  
                     tampilkanLaguRekursif(file,data);
+                    cout<<"====================================="<<endl;
                     file.close();
                 break;
             case 3: {
@@ -246,6 +269,23 @@ bool pilih(fstream &file,fstream &count,Penyanyi &data, int &jumlahPenyanyi){
                 }
                 bool asc = false;
                 string order;
+                int MAX_LAGU = 100;
+                Penyanyi semuaLagu[MAX_LAGU];
+                int jumlahLagu = readAllLaguToArray(file, semuaLagu, MAX_LAGU);
+                int pilihSort;
+                cout<<"Urutkan Berdasarkan : "<<endl;
+                cout<<"1. Artis"<<endl;
+                cout<<"2. Lagu"<<endl;
+                do
+                {
+                    cout<<"Pilihan : ";
+                    cin>>pilihSort;
+                    if (pilihSort < 1 || pilihSort > 2)
+                    {
+                        cout<<"Invalid Input"<<endl;
+                    } 
+                } while (pilihSort < 1 || pilihSort > 2);
+                cin.ignore();
                 cout << "Urutkan lagu berdasarkan judul secara (Asc: a || Desc = z)? :";
                 do{
                 cin >> order;
@@ -258,10 +298,14 @@ bool pilih(fstream &file,fstream &count,Penyanyi &data, int &jumlahPenyanyi){
                   asc = true;  
                 } 
                 cin.ignore();
-                int MAX_LAGU = 100;
-                Penyanyi semuaLagu[MAX_LAGU];
-                int jumlahLagu = readAllLaguToArray(file, semuaLagu, MAX_LAGU);
-                bubbleSortLaguJudul(semuaLagu, jumlahLagu, asc);
+                if (pilihSort == 1)
+                {
+                    bubbleSortLaguArtis(semuaLagu, jumlahLagu, asc);
+                }
+                else {
+                    bubbleSortLaguJudul(semuaLagu, jumlahLagu, asc);
+                }
+                
                 tampilkanSortedLagu(semuaLagu, jumlahLagu);
                 break;
             }
@@ -289,7 +333,8 @@ bool tampilkanMenu(fstream &file, fstream &count,Penyanyi &data) {
     int pilihan;
     int jumlahPenyanyi = hitungJumlahPenyanyi(count);
     do {
-        cout << "\n=== Menu ===" << endl;
+        system("cls");
+        cout << "\n=========== Menu ===========" << endl;
         cout << "1. Input Data Penyanyi dan Lagu" << endl;
         cout << "2. Tampilkan Semua Lagu" << endl;
         cout << "3. Cari Lagu" << endl;
