@@ -15,7 +15,7 @@ struct Penyanyi {
 
 
 void writeDataCount(fstream &count, int &jumlahPenyanyi){
-    count.open("count.txt",ios::in|ios::out);
+    count.open("count.txt",ios::out);
     count<<jumlahPenyanyi;//Menulis Jumlah Penyanyi Ke File
     count.close();
 }
@@ -24,7 +24,6 @@ void writeDataCount(fstream &count, int &jumlahPenyanyi){
 //Fungsi Menulis Data Penyanyi Ke File
 void writeData(fstream &file, fstream &count,Penyanyi &data,int &jumlahPenyanyi){
     file.open("file.txt",ios::in|ios::out|ios::app);  
-    file<<"ARTIS KE-"<<jumlahPenyanyi<<endl;
     file<<"NAMA : "<<data.nama<<endl;
     file<<"JUDUL : "<<data.lagu.judul<<endl;
     file<<"GENRE : "<<data.lagu.genre<<endl;
@@ -70,8 +69,6 @@ void inputData(fstream &file,fstream &count,Penyanyi &data, int &jumlahPenyanyi)
 Penyanyi readData(fstream &file, Penyanyi &data) {
     string temp;
     size_t pos;
-    // NO
-    if (!getline(file, temp)) return data;
     // NAMA
     if (getline(file, temp)) {
         pos = temp.find(":"); //Cari ":" + 2 untuk mendapatkan data 
@@ -132,9 +129,13 @@ void cariLaguSequential(fstream &file, Penyanyi &data) {
     bool found = false;
     int counter = 0;
     file.open("file.txt",ios::in);
-    while (!file.eof() && !found)
+    while (true)
     {
         output = readData(file,data);//Ambil Data Dari File (Pake Penyanyi output karena lebih optimal)
+        if (file.eof()||file.fail()||output.nama.empty())
+        {
+        break;
+        }
         if (output.nama==name)
         {
             found = true;
@@ -152,7 +153,7 @@ void cariLaguSequential(fstream &file, Penyanyi &data) {
         } 
     }
     cout<<"====================================="<<endl;
-    file.close();  
+    file.close();
     if (!found)
     {
     cout<<"Not Found"<<endl;
@@ -227,6 +228,72 @@ void tampilkanSortedLagu(Penyanyi arr[], int n) {
     }
 }
 
+void hapusDataArtis(fstream &file, fstream &count, int &jumlahPenyanyi) {
+    string namaTarget;
+    fstream temp;
+    cout << "Masukkan nama artis yang ingin dihapus: ";
+    cin.ignore();
+    getline(cin, namaTarget);
+    file.open("file.txt",ios::in);
+    temp.open("temp.txt",ios::out|ios::app);
+    string line;
+    bool skip = false;
+    bool deleted = false;
+    while (getline(file, line)) {
+        // Deteksi baris nama
+        if (line.find("NAMA : ") != string::npos) {
+            string nama = line.substr(line.find(":") + 2);
+            if (nama == namaTarget) {
+                skip = true; // Mulai lewati 6 baris (judul, genre, durasi, tahun, newline)
+                deleted = true;
+            } else {
+                skip = false;
+            }
+        }
+
+        if (!skip) {
+            temp << line << endl;
+        }
+        // Deteksi akhir 1 blok artis (baris kosong)
+        if (line.empty()) {
+            skip = false;
+        }
+    }
+    file.close();
+    temp.close();
+    // Ganti file lama dengan file baru
+    remove("file.txt");
+    rename("temp.txt", "file.txt");
+
+    //Simpan Data Jumlah Penyanyi
+    jumlahPenyanyi -= 1;
+    writeDataCount(count, jumlahPenyanyi);
+    if (deleted) {
+        cout << "Data artis \"" << namaTarget << "\" berhasil dihapus." << endl;
+    } else {
+        cout << "Data artis \"" << namaTarget << "\" tidak ditemukan." << endl;
+    }
+}
+
+
+void menuHapus(fstream &file, fstream &count, int &jumlahPenyanyi){
+    int pilihan;
+    cout<<"Hapus Data"<<endl;
+    cout<<"1. Hapus Artis "<<endl;
+    cout<<"2. Hapus Lagu "<<endl;
+    cout<<"Masukkan Plihan : ";
+    cin>>pilihan;
+    if (pilihan==1)
+    {
+        
+        hapusDataArtis(file,count,jumlahPenyanyi); 
+    }
+    else {
+
+    }
+    
+}
+
 bool pilih(fstream &file,fstream &count,Penyanyi &data, int &jumlahPenyanyi){
     int pilihan;
     do
@@ -237,7 +304,7 @@ bool pilih(fstream &file,fstream &count,Penyanyi &data, int &jumlahPenyanyi){
         {
             cout<<"Invalid Input"<<endl;
         }    
-    } while (pilihan<0||pilihan>5);
+    } while (pilihan<0||pilihan>6);
     
     switch (pilihan) {
             case 1:
@@ -246,11 +313,12 @@ bool pilih(fstream &file,fstream &count,Penyanyi &data, int &jumlahPenyanyi){
             case 2:
                 if (jumlahPenyanyi == 0) {
                     cout << "Belum ada data yang dimasukkan!" << endl;
-                } else 
-                    file.open("file.txt",ios::in|ios::out|ios::app);  
+                } else {
+                    file.open("file.txt",ios::in);  
                     tampilkanLaguRekursif(file,data);
                     cout<<"====================================="<<endl;
                     file.close();
+                }
                 break;
             case 3: {
                 if (jumlahPenyanyi == 0) {
@@ -289,10 +357,10 @@ bool pilih(fstream &file,fstream &count,Penyanyi &data, int &jumlahPenyanyi){
                 cout << "Urutkan lagu berdasarkan judul secara (Asc: a || Desc = z)? :";
                 do{
                 cin >> order;
-                    if (order!="a"&&order!="A"&&order!="z"&&order!="z"){
+                    if (order!="a"&&order!="A"&&order!="Z"&&order!="z"){
                         cout<<"Invalid Input..."<<endl;
                     }
-                } while (order!="a"&&order!="A"&&order!="z"&&order!="z");
+                } while (order!="a"&&order!="A"&&order!="Z"&&order!="z");
                 if (order == "a" || order == "A")
                 {
                   asc = true;  
@@ -310,6 +378,10 @@ bool pilih(fstream &file,fstream &count,Penyanyi &data, int &jumlahPenyanyi){
                 break;
             }
             case 5:
+
+                menuHapus(file,count,jumlahPenyanyi);
+                break;
+            case 6:
                 cout << "Keluar dari program..." << endl;
                 exit(0);
             default:
@@ -318,15 +390,15 @@ bool pilih(fstream &file,fstream &count,Penyanyi &data, int &jumlahPenyanyi){
 }
 
 int hitungJumlahPenyanyi(fstream &count) {
-    count.open("count.txt", ios::in|ios::out|ios::app);
+    count.open("count.txt", ios::in);
     int counter = 0;
-   while (!count.eof())
-   {
-    count>>counter;
-   }
-    count.close();
+    if (count.is_open()) {
+        count >> counter;
+        count.close();
+    }
     return counter;
 }
+
 
 // Tampilan Menu
 bool tampilkanMenu(fstream &file, fstream &count,Penyanyi &data) {
@@ -339,7 +411,8 @@ bool tampilkanMenu(fstream &file, fstream &count,Penyanyi &data) {
         cout << "2. Tampilkan Semua Lagu" << endl;
         cout << "3. Cari Lagu" << endl;
         cout << "4. Urutkan Lagu" << endl;
-        cout << "5. Keluar" << endl;
+        cout << "5. Hapus Data" << endl;
+        cout << "6. Keluar" << endl;
         pilih(file,count,data,jumlahPenyanyi);
         // Konfirmasi apakah ingin kembali ke menu
         char lanjut;
